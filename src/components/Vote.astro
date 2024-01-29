@@ -1,0 +1,126 @@
+<div>
+  <p class="description">
+    AWSのAPI Gateway、Lambda(Node.js v20 + AWS SDK v3)、<br
+    />DynamoDBを使用したサーバレス投票です。<br
+    />IPアドレス毎に1日1回投票ができ、0時に再投票可能になります。
+  </p>
+  <ul>
+    <li data-category="A">Aに投票する</li>
+    <li data-category="B">Bに投票する</li>
+    <li data-category="C">Cに投票する</li>
+  </ul>
+  <span class="loading"
+    ><img src="/serverless-vote/spin-black.svg" alt="" /></span
+  >
+  <p class="response"></p>
+</div>
+
+<style>
+  div {
+    padding: 100px 0;
+  }
+  p {
+    padding: 0 20px;
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+    color: #333;
+    text-align: center;
+  }
+  ul {
+    margin-top: 40px;
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 15px 15px;
+    flex-wrap: wrap;
+  }
+  ul li {
+    padding: 15px 40px;
+    display: inline-block;
+    border-radius: 100px;
+    font-size: 16px;
+    color: #fff;
+    cursor: pointer;
+  }
+  ul li:nth-child(1) {
+    background-color: #e3364a;
+    box-shadow: 0 5px 0 #ca1c30;
+  }
+  ul li:nth-child(2) {
+    background-color: #61b0e2;
+    box-shadow: 0 5px 0 #369ada;
+  }
+  ul li:nth-child(3) {
+    background-color: #34b496;
+    box-shadow: 0 5px 0 #298c75;
+  }
+  @media (any-hover: hover) {
+    ul li:hover {
+      transform: translateY(5px);
+      box-shadow: none;
+    }
+  }
+  span {
+    width: 32px;
+    margin: 40px auto 0;
+    display: none;
+  }
+  .response {
+    margin-top: 40px;
+    color: #f00;
+  }
+</style>
+
+<script>
+  class vote {
+    constructor() {
+      this.button = document.querySelectorAll("ul li");
+      this.loading = document.querySelector(".loading");
+      this.response = document.querySelector(".response");
+
+      const protocoll = location.protocol;
+      const hostname = location.hostname;
+      const host = protocoll + "//" + hostname;
+
+      this.button.forEach((element) => {
+        const category = element.dataset.category;
+
+        element.addEventListener("click", () => {
+          const requestBody = {
+            category: "patitionKey",
+            host: host,
+            target: category,
+          };
+          this.fetchApi(requestBody);
+        });
+      });
+    }
+
+    async fetchApi(requestBody) {
+      this.loading.style.display = "block";
+      this.response.textContent = "";
+      const request = await fetch(
+        "https://r05i46ecn0.execute-api.ap-northeast-1.amazonaws.com/serverlessVoteStage",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+      const response = await request.json();
+
+      if (response.statusCode === 200) {
+        this.response.textContent = "投票が完了しました。";
+      } else if (response.statusCode === 500) {
+        this.response.textContent = "エラーが発生しました。";
+      } else {
+        this.response.textContent = "1日1回投票できます。";
+      }
+      this.loading.style.display = "none";
+    }
+  }
+  new vote();
+</script>
