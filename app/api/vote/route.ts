@@ -7,6 +7,7 @@ export async function POST(request: NextRequest) {
     category,
     host,
     target,
+    userIp: request.headers.get('x-forwarded-for') || request.connection.remoteAddress,
   };
 
   const headers: HeadersInit = new Headers({
@@ -33,8 +34,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: '投票が完了しました。' }, { status: 200 });
     } else if (data.statusCode === 500) {
       return NextResponse.json({ message: 'エラーが発生しました。' }, { status: 500 });
-    } else {
+    } else if (data.statusCode === 400) {
       return NextResponse.json({ message: '1日1回投票できます。' }, { status: 400 });
+    } else {
+      return NextResponse.json({ message: 'エラーが発生しました。' }, { status: 500 });
     }
   } catch (error) {
     return NextResponse.json({ message: 'エラーが発生しました。' }, { status: 500 });
