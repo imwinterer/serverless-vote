@@ -3,11 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   const { category, host, target } = await request.json();
 
+  const userIp = request.headers.get('x-forwarded-for') || '';
+
   const requestBody = {
     category,
     host,
     target,
-    userIp: request.headers.get('x-forwarded-for') || request.connection.remoteAddress,
+    userIp,
   };
 
   const headers: HeadersInit = new Headers({
